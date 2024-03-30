@@ -1,41 +1,44 @@
-import { useEffect, useState } from "react"
-import { ToDoList } from "./WorkList/ToDoList";
+import { createContext, useEffect, useState } from "react"
+import { ContactList } from "./List/ContactList";
 import { nanoid } from "nanoid";
 import { TaskForm } from "./TaskForm/TaskForm";
 import { Filter } from "./Filter/Filter";
 
-export const App =()=>{
-  const [toDos, changeToDos]=useState([])
-  const [fillter, changeFilter]=useState('')
+export const MyData = createContext(null)
 
+export const App =()=>{
+  const [contacts, changeContacts]=useState([])
+  const [fillter, changeFilter]=useState('')
   useEffect(()=>{
-    const toDos=JSON.parse(localStorage.getItem('toDos'))
-    changeToDos(toDos)
+    changeContacts(JSON.parse(localStorage.getItem('contacts')))
   },[])
 
-  const addToDo=(name, num)=>{
-    const newToDo={
-      name:name,
-      num:num,
-      id: nanoid()
-    }
-    changeToDos([newToDo, ...toDos])
+  const addContact=(name, num)=>{
+      const newcontact={
+        name:name,
+        num:num,
+        id: nanoid()
+      }
+      changeContacts([ ...contacts, newcontact])
+      localStorage.setItem('contacts', JSON.stringify(contacts))
   }
 
-  const onDelete=(toDoId)=>{
-        changeToDos(toDos.filter(toDo=>toDoId!==toDo.id))
-  }
-  useEffect(()=>{window.localStorage.setItem('toDos', JSON.stringify(toDos))}, [toDos])
 
-  const visibleToDos=()=>{
-    return toDos.filter(toDo=>toDo.name.toLowerCase().includes(fillter.toLowerCase())||toDo.num.includes(fillter))
+  const onDelete=(contactId)=>{
+        changeContacts(contacts.filter(contact=>contactId!==contact.id))
   }
+  useEffect(()=>{window.localStorage.setItem('contacts', JSON.stringify(contacts))}, [contacts])
+
+  const visibleContacts=()=>{
+    return contacts.filter(contact=>contact.name.toLowerCase().includes(fillter.toLowerCase())||contact.num.includes(fillter))
+  }
+  const [data]=useState({onDelete: onDelete})
   
     return (
-      <>
-        <TaskForm addToDo={addToDo}/>
+      <MyData.Provider value={data}>
+        <TaskForm addContact={addContact}/>
         <Filter value={fillter} changeFilter={changeFilter}/>
-        {toDos&&<ToDoList toDos={visibleToDos()} onDelete={onDelete}/>}
-      </>
+        {contacts&&<ContactList contacts={visibleContacts()}/>}
+      </MyData.Provider>
     );
 };
